@@ -1,0 +1,298 @@
+<html layout:decorate="~{layout}">
+<div layout:fragment="content" class="container my-3">
+	<style>
+		.profileImage #showProfileImage {
+			border: 2px solid #555;
+			border-radius: 10px;
+			padding: 10px;
+		}
+	</style>
+	<!-- 질문 -->
+	<h2 class="border-bottom py-2" th:text="${question.subject}"></h2>
+	<!-- Question Start -->
+	<div class="card my-3">
+		<div class="card-body">
+			<div class="card-text" th:utext="${@commonUtil.markdown(question.content)}"></div>
+				
+				<div class="d-flex justify-content-between align-items-end">
+					<div class="my-0">
+						<a href="javascript:void(0);" class="recommend btn btn-sm btn-outline-secondary"
+							th:data-uri="@{|/question/${question.boardId}/vote/${question.id}|}">
+							추천
+							<span class="badge rounded-pill bg-success"
+								th:text="${#lists.size(question.voter)}"></span>
+						</a>
+						<a th:href="@{|/question/${question.boardId}/modify/${question.id}|}" class="btn btn-sm btn-outline-secondary"
+							sec:authorize="isAuthenticated" th:if="${question.author != null and #authentication.getPrincipal().getUsername() == question.author.username}"
+							th:text="수정">
+						</a>
+						<a href="javascript:void(0);"
+							th:data-uri="@{|/question/${question.boardId}/delete/${question.id}|}"
+							class="delete btn btn-sm btn-outline-secondary"
+							sec:authorize="isAuthenticated()" th:if="${question.author != null and #authentication.getPrincipal().getUsername() == question.author.username}"
+							th:text="삭제">
+						</a>
+						<span style="color: lightgray;" th:text="'조회수: ' + ${question.viewCount}"></span>
+					</div>
+					
+					<div class="d-flex justify-content-end align-items-end">
+						<div class="profileImage mx-3">
+							<img th:src="${authorPicture.QuestionAuthorPicture}"id="showProfileImage" width="150px", height="150px">
+						</div>
+						<div class="d-flex flex-column">
+							<div class="badge bg-light text-dark p-2 text-start">
+								<div class="mb-2">
+									<span th:if="${question.author != null}" th:text="${question.author.username}"></span>
+								</div>
+								<div th:text="${#temporals.format(question.createDate, 'yyyy-MM-dd HH:mm')}"></div>
+							</div>
+							<div th:if="${question.modifyDate != null}" class="badge bg-light text-dark p-2 text-start mt-1">
+								<div class="mb-2">modified at</div>
+								<div th:text="${#temporals.format(question.modifyDate, 'yyyy-MM-dd HH:mm')}"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- Question End -->
+		</div>
+	</div>
+	<!-- 답변 개수 표시 -->
+	<div class="d-flex justify-content-between align-items-center my-3 py-2 border-bottom">
+		<h5 th:text="|${answerTotalCount}개의 답변이 있습니다.|"></h5>
+		<ul class="d-flex list-unstyled mb-0">
+			<li>
+				<a class="btn btn-sm btn-outline-secondary sortKw"
+					th:classappend="${sort == 'newest'} ? 'disabled'"
+					id="sort_newest" th:text="최신순" data-value="newest"></a>
+				<a class="btn btn-sm btn-outline-secondary sortKw"
+					th:classappend="${sort == 'ranking'} ? 'disabled'"
+					id="sort_ranking" th:text="추천순" data-value="ranking"></a>
+			</li>
+		</ul>
+	</div>        
+	<!-- 답변 반복 시작 -->
+	<div th:each="answer : ${answerTotal}" class="mb-3">
+		<div class="d-flex align-items-start">
+			<img th:if="${answer.level == 2}" src="/images/arrow.png" height="20" width="20" class="me-2 mt-2">
+			<div class="card w-100">
+				<a th:if="${answer.level == 1}" th:id="|answer_${answer.id}|"></a> <!-- 원위치로 이동할 때 사용 -->
+				<a th:unless="${answer.level == 1}" th:id="|comment_${answer.id}|"></a>
+				<div class="card-body">
+					<div class="card-text" th:utext="${@commonUtil.markdown(answer.content)}"></div>
+					<div class="d-flex justify-content-between align-items-end">
+							<div class="my-0"
+								 th:with="	isAnswer=${answer.level == 1},
+											isComment=${answer.level == 2},
+											modifyUrl=${isAnswer ? '/answer/modify/' + answer.id : (isComment ? '/comment/modify/' + answer.id : '')},
+											deleteUrl=${isAnswer ? '/answer/delete/' + answer.id : (isComment ? '/comment/delete/' + answer.id : '')},
+											finalUrl=@{|${modifyUrl}?sort=${sort}&page=${page}|},
+											finalDeleteUrl=@{|${deleteUrl}|}">
+											
+								<a th:if="${answer.level == 1}"  href="javascript:void(0);" class="recommend btn btn-sm btn-outline-secondary"
+									th:data-uri="@{|/answer/vote/${answer.id}|}">
+									추천
+									<span class="badge rounded-pill bg-success"
+										th:text="${answer.answerVoteCount}"></span>
+								</a>
+								
+								<a th:if="${answer.authorId != null and #authentication.getPrincipal().getUsername() == answer.username and (isAnswer or isComment)}"
+								   th:href="${finalUrl}" class="btn btn-sm btn-outline-secondary"
+									sec:authorize="isAuthenticated()" th:text="수정">
+								</a>
+								
+								<a  th:if="${answer.authorId != null and #authentication.getPrincipal().getUsername() == answer.username and (isAnswer or isComment)}"						
+									href="javascript:void(0);" th:data-uri="${finalDeleteUrl}"
+									class="delete btn btn-sm btn-outline-secondary"
+									sec:authorize="isAuthenticated()"
+									th:text="삭제"></a>
+									
+								<a th:if="${isAnswer}" class="commentBtn btn btn-sm btn-outline-secondary" th:data-id="|cb_${answer.id}|" sec:authorize="isAuthenticated()">댓글 작성</a>
+							</div>
+							<div class="d-flex justify-content-end align-items-end">
+								<div class="profileImage mx-3">
+									<img th:src="${answer.answerAuthorPicture}"id="showProfileImage" width="150px", height="150px">
+								</div>
+								<div class="d-flex flex-column">
+
+									<div class="badge bg-light text-dark p-2 text-start">
+										<div class="mb-2">
+											<span th:if="${answer.authorId != null}" th:text="${answer.username}"></span>
+										</div>
+										<div th:text="${#temporals.format(answer.createDate, 'yyyy-MM-dd HH:mm')}"></div>
+									</div>
+									<div th:if="${answer.modifyDate != null}" class="badge bg-light text-dark p-2 text-start mt-1">
+										<div class="mb-2">modified at</div>
+										<div th:text="${#temporals.format(answer.modifyDate, 'yyyy-MM-dd HH:mm')}"></div>
+									</div>
+								</div>
+							</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<!-- 답글의 댓글 작성 START -->
+		<form th:action="@{|/comment/create/${answer.id}|}" th:object="${answerForm}" method="post" class="commentForm">
+			<div th:if="${answer.level == 1}" class="commentBox d-flex align-items-start mt-3" th:classappend="${answer.id} != ${targetId} ? 'd-none'" th:data-id="|cb_${answer.id}|" th:id="|cb_${answer.id}|">
+				<img src="/images/arrow.png" height="20" width="20" class="me-2 mt-2">
+					<div class="w-100">
+						<div th:if="${commentErr} != null and ${answer.id} == ${targetId}">
+							<div th:replace="~{comment_form_errors :: formErrorsFragment}" ></div>
+						</div>
+						<div class="card w-100">
+								<textarea th:field="*{content}" class="card-body form-control"></textarea>	
+						</div>
+					</div>
+				<input type="submit" value="댓글 등록" class="btn btn-primary ms-2 align-self-end commentCreateBtn" /> <!-- To do -->
+			</div>
+		</form>
+		<!-- 답글의 댓글 작성 END -->
+	</div>
+	<!-- 답변 반복 끝 -->
+	<!-- 페이징 시작 -->
+	<div>
+		<ul class="pagination justify-content-center">
+			<li class="page-item" th:classappend="${page == 0} ? 'disabled'">
+				<a class="page-link" href="javascript:void(0)"
+					th:data-page="${page-1}">이전</a>
+			</li>
+			<li th:each="n : ${#numbers.sequence(0, answerPageCount)}"
+				th:if="${n >= page - 5 and n <= page + 5}"
+				class="page-item" th:classappend="${n == page} ? 'active'">
+				<a th:text="${n}" class="page-link" href="javascript:void(0)"
+					th:data-page="${n}"></a>
+			</li>
+			<li class="page-item" th:classappend="${page == answerPageCount} ? 'disabled'">
+				<a class="page-link" href="javascript:void(0)"
+					th:data-page="${page+1}">다음</a>
+			</li>
+		</ul>
+	</div>
+	<!-- 페이징 끝-->
+	<!-- 페이징, 정렬 시작 -->
+	<form th:action="@{|/question/${boardId}/detail/${question.id}|}" method="get" id="sortBy">
+		<input type="hidden" id="sort" name="sort" th:value="${sort}">
+		<input type="hidden" id="page" name="page" th:value="${page}">
+	</form>
+	<!-- 페이징, 정렬 끝-->
+	<!-- 답변 작성 시작 -->
+	<form th:action="@{|/answer/create/${question.id}|}" th:object="${answerForm}" method="post" class="my-3" id="answer_box">
+		<div th:if="${answerErr} != null">
+			<div th:replace="~{form_errors :: formErrorsFragment}"></div>
+		</div>
+		<textarea sec:authorize="isAnonymous()" disabled 
+		th:field="*{content}" rows="10" class="form-control"></textarea>
+		<textarea sec:authorize="isAuthenticated()"
+		th:field="*{content}" rows="10" class="form-control"></textarea>
+		<input type="submit" value="답변 등록" class="btn btn-primary my-2" sec:authorize="isAuthenticated()" />
+		<input type="hidden" id="sort" name="sort" th:value="${sort}">
+		<input type="hidden" id="page" name="page" th:value="${page}">
+	</form>
+	<!-- 답벽 작성 끝 -->
+</div>
+<script layout:fragment="script" type='text/javascript'>
+	
+	const delete_elements = document.getElementsByClassName("delete");
+	Array.from(delete_elements).forEach(function(element) {
+		element.addEventListener('click', function() {
+			if(confirm("정말로 삭제하겠습니까?")) {
+				location.href = this.dataset.uri;
+			};
+		});
+	});
+	
+	const recommend_elements = document.getElementsByClassName("recommend");
+	Array.from(recommend_elements).forEach(function(element) {
+		element.addEventListener('click', function() {
+			if(confirm("정말로 추천하시겠습니까?")) {
+				
+				// const boardId = [[${boardId}]];
+				
+				location.href = this.dataset.uri 
+							  + '?'
+							  + 'sort='
+							  + document.getElementById('sort').value
+							  + '&'
+							  + 'page='
+							  + document.getElementById('page').value
+							  + '&'
+							  ;
+				
+				;
+			};
+		});
+	});
+	
+	const sort_elements = document.getElementsByClassName("sortKw");
+	Array.from(sort_elements).forEach(function(element) {
+		element.addEventListener('click', function() {
+			document.getElementById('sort').value = this.dataset.value;
+			document.getElementById('page').value = 0;
+			console.log(document.getElementById('sort').value);
+			document.getElementById('sortBy').submit();
+		});
+	});
+	
+	const page_elements = document.getElementsByClassName("page-link");
+	Array.from(page_elements).forEach(function(element) {
+		element.addEventListener('click', function() {
+			document.getElementById('page').value = this.dataset.page;
+			console.log("gggg");
+			console.log(document.getElementById('page').value);
+			document.getElementById('sortBy').submit();
+		});
+	});
+	
+	const commentBtn_elements = document.getElementsByClassName("commentBtn");
+	Array.from(commentBtn_elements).forEach(function(element) {
+		element.addEventListener('click', function() {
+			
+			console.log(this);
+			
+			const answerId = this.dataset.id;
+			console.log(answerId);
+			
+			
+			// const commentBox = document.querySelector(`.commentBox[data-id='${answerId}']`);
+			const commentBox = document.querySelector(".commentBox[data-id='" + answerId + "']");
+			console.log(commentBox);
+			
+			if (commentBox) {
+				commentBox.classList.toggle("d-none");
+			}
+			
+		});
+	});
+	
+	const createComments_elements = document.getElementsByClassName("commentForm");
+	Array.from(createComments_elements).forEach(function(element) {
+		const submitBtn = element.querySelector('input[type="submit"]');
+		submitBtn.addEventListener('click', function(event) {
+			
+			event.preventDefault();
+			
+			
+			
+			const sort = document.getElementById('sort').value;
+			const page = document.getElementById('page').value;
+			
+			const sortInput = document.createElement("input");
+			sortInput.type = "hidden";
+			sortInput.name = "sort";
+			sortInput.value = sort;
+			
+			element.appendChild(sortInput);
+			
+			const pageInput = document.createElement("input");
+			pageInput.type = "hidden";
+			pageInput.name = "page";
+			pageInput.value = page;
+			
+			element.appendChild(pageInput);
+			
+			element.submit();
+		});
+	});
+	 
+</script>	
+</html>

@@ -1,0 +1,165 @@
+<html layout:decorate="~{layout}">
+<div layout:fragment="content" class="container my-3">
+
+	<head>
+		<meta id="_csrf" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+	</head>
+	<style>
+		.content-box {
+			display: -webkit-box;
+			-webkit-line-clamp: 5;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		a {
+			text-decoration: none;
+			color: black;
+		}
+
+		.post-subject td {
+			padding-bottom: 0;
+		}
+	</style>
+
+	<div class="my-3 mb-2 border-bottom">
+		<h4>내가 쓴 글</h4>
+	</div>
+
+	<div class="d-flex justify-content-end mb-2">
+		<a class="delete btn btn-sm btn-outline-secondary" id="delete" sec:authorize="isAuthenticated()">삭제</a>
+	</div>
+
+	<table class="table">
+		<thead class="table-dark">
+			<tr class="text-center">
+				<th style="width: 50px;"></th>
+				<th>게시글</th>
+			</tr>
+		</thead>
+		<tbody>
+			<th:block th:each="post : ${posts}">
+				<tr class="post-subject">
+					<td rowspan="2"><input type="checkbox" class="post-cb" th:id="'cb_' + ${post.id}"
+							th:value="${post.id}"></td>
+					<td class="border-0"><a th:href="@{|/question/${post.boardId}/detail/${post.id}|}"><b
+								th:text="${post.subject}"></a></b></td>
+				</tr>
+				<tr class="post-content">
+					<td><a th:href="@{|/question/${post.boardId}/detail/${post.id}|}">
+							<div class="content-box" th:text="${post.content}"></div>
+						</a></td>
+				</tr>
+			</th:block>
+			<th:block th:if="${posts.isEmpty()}">
+				<tr class="text-center">
+					<td colspan="2">작성된 글이 없습니다.</td>
+				</tr>
+			</th:block>
+		</tbody>
+	</table>
+
+	<div th:if="${!posts.isEmpty()}">
+		<ul class="pagination justify-content-center">
+			<li class="page-item" th:classappend="${!posts.hasPrevious} ? 'disabled'">
+				<a class="page-link" href="javascript:void(0)" th:data-page="${posts.number-1}">
+					<span>이전</span>
+				</a>
+			</li>
+			<li th:each="page : ${#numbers.sequence(0, posts.totalPages-1)}"
+				th:if="${page >= posts.number - 5 and page <= posts.number + 5}"
+				th:classappend="${page == posts.number} ? 'active'" class="page-item">
+				<a th:text="${page}" class="page-link" href="javascript:void(0)" th:data-page="${page}"></a>
+			</li>
+			<li class="page-item" th:classappend="${!posts.hasNext} ? 'disabled'">
+				<a class="page-link" href="javascript:void(0)" th:data-page="${posts.number+1}">
+					<span>다음</span>
+				</a>
+			</li>
+		</ul>
+	</div>
+
+	<form th:action="@{|/user/posts|}" method="get" id="pageForm">
+		<input type="hidden" id="page" name="page" th:value="${posts.number}">
+	</form>
+</div>
+
+<script layout:fragment="script" type="text/javascript">
+	const page_elements = document.getElementsByClassName("page-link");
+	Array.from(page_elements).forEach(function (element) {
+		element.addEventListener('click', function () {
+			document.getElementById('page').value = this.dataset.page;
+			document.getElementById('pageForm').submit();
+		})
+	})
+
+	//let checkedCB;
+
+	const postCB_elements = document.getElementsByClassName("post-cb");
+	Array.from(postCB_elements).forEach(function (element) {
+		element.addEventListener('click', function () {
+			if (element.checked) {
+				console.log(element.getAttribute('id'));
+			}
+			/*
+			checkedCB = Array.from(postCB_elements).filter(cb => cb.checked).map(cb => cb.value);
+					console.log(checkedCB);
+			*/
+
+		})
+	})
+
+	const delete_element = document.getElementById("delete");
+	delete_element.addEventListener('click', function () {
+
+
+		if (confirm("정말로 삭제하시겠습니까?")) {
+			const checkedCB = Array.from(postCB_elements).filter(cb => cb.checked).map(cb => cb.value);
+			console.log(checkedCB);
+
+			if (checkedCB.length == 0) {
+				alert("선택된 항목이 없습니다.");
+			} else {
+
+				const token = document.getElementById('_csrf').getAttribute('value');
+				console.log(token);
+
+				fetch('/question/deletePosts', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'X-CSRF-Token': token
+					},
+					body: JSON.stringify({postIds: checkedCB})
+				})
+					.then(async response => {
+
+						const data = await response.json();
+
+						if (!response.ok) {
+
+							alert(data.message || "오류 발생");
+
+							return;
+						}
+
+						if (data.redirectUrl) {
+							window.location.href = data.redirectUrl;
+						}
+
+					}
+
+					)
+					.catch(error => {
+						alert(error);
+					})
+
+
+			}
+		}
+	}
+	)
+</script>
+
+</html>

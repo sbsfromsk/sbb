@@ -1,0 +1,102 @@
+<nav th:fragment="navbarFragment" class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+	<style>
+		@media(max-width: 992px) {
+			.navbar-collapse {
+				background-color:#f8f9fa;
+				margin-top: calc(8px - 0.727px);
+				margin-left: -12px;
+				margin-right: -12px;
+			}
+			
+			
+			.navbar-collapse ul {
+				padding: 8px 12px;
+			}
+			
+			
+		}
+	</style>
+	<!-- navbar-toggler, collapse, navbar-collapse 아님..-->
+	
+	<div class="container-fluid">
+		<button class="navbar-toggler d-lg-none" type="button"
+				data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent2"
+				aria-controls="navbarSupportedContent2" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		
+		<a class="navbar-brand" href="/">SBB</a>
+		
+		<button class="navbar-toggler" type="button"
+				data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+				aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="bi bi-person" style="font-size: 30px;"></span>
+		</button>
+		
+		<div class="collapse navbar-collapse" id="navbarSupportedContent">
+			<ul class="navbar-nav me-auto mb-2 mb-lg-0">
+				<li class="nav-item">
+					<a class="nav-link"
+					   sec:authorize="isAnonymous()" 
+					   th:href="@{/user/login}">로그인</a>
+				    <a class="nav-link"
+					   sec:authorize="isAuthenticated()"
+					   th:href="@{/user/logout}">로그아웃</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" 
+					   sec:authorize="isAnonymous()"		
+					   th:href="@{/user/signup}">회원 가입</a>
+				    <a class="nav-link"
+					   sec:authorize="isAuthenticated()"
+					   th:href="@{/user/profile}">나의 프로필</a>
+				</li>
+			</ul>			
+		</div>
+		
+		<div class="collapse navbar-collapse" id="navbarSupportedContent2">
+			<ul class="navbar-nav me-auto mb-2 mb-lg-0 d-lg-none">
+				<li th:each="board : ${boardList}" class="nav-item" >
+					<a th:if="${board.category.name == 'QUESTION'}"
+					   th:href="@{|/${board.category.prefix}/${board.id}/list|}"
+					   th:text="${board.boardKr}" class="nav-link"></a>
+					<a th:if="${board.category.name != 'QUESTION'}"
+					   th:href="@{|/${board.category.prefix}/${board.board}|}"
+					   th:text="${board.boardKr}" class="nav-link"></a>
+				</li>
+			</ul>			
+		</div>
+	</div>
+	
+	<script>
+		const elements_btn = document.getElementsByClassName('navbar-toggler');
+		const elements_toggle = document.getElementsByClassName('navbar-collapse');
+		
+		Array.from(elements_btn).forEach(function(element) {
+			element.addEventListener('click', function() {
+				const target = this.getAttribute('data-bs-target');				
+				
+				Array.from(elements_toggle).forEach(function(element) {
+					let eachId = element.getAttribute('id');
+					if(target == ("#" + eachId)) {
+						for (let clsd of elements_toggle) {
+							console.log(clsd);	
+						}
+					
+							//element.classList.add('show');
+							console.log("'show' 클래스가 포함되어 있지 않으므로 추가합니다.");
+						
+						
+						console.log("eachId: " + eachId);
+						console.log("targetId: " + target);
+					} else {
+						for (let clsd of elements_toggle) {
+													console.log(clsd);	
+												}
+						element.classList.remove('show');
+					}
+				});
+			})
+		})
+	</script>
+</nav>

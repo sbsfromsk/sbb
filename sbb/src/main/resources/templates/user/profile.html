@@ -1,0 +1,151 @@
+<html layout:decorate="~{layout}">
+	<div layout:fragment="content" class="container my-3">
+		<head>
+			<meta id="_csrf" name="_csrf" th:value="${_csrf.token}" />		<!-- CSRF 토큰 -->
+			<meta id="_csrf_header" name="_csrf_header" th:value="${_csrf.headerName}" /> <!-- CSRF 헤더 이름 -->
+		</head>
+		<style>
+			.profileImage #showProfileImage {
+				border: 2px solid #555;
+				border-radius: 10px;
+				padding: 10px;
+			}
+		</style>
+		
+		<div class="my-3 border-bottom">
+			<h4>개인 정보</h4>
+		</div>
+	
+		
+	<form th:action="@{/user/profile}" th:object="${userProfileForm}" method="post" enctype="multipart/form-data">
+		
+		<div th:replace="~{form_errors :: formErrorsFragment}"></div>
+		
+		<div class="profileImage d-flex flex-column align-items-center justify-content-center">
+			<img th:src="${userProfileForm.profilePictureUrl}" alt="profile" width="150" height="150" class="mb-3" id="showProfileImage">
+			<div class="d-flex align-items-center justify-content-center">
+				<label for="profilePicture" class="btn btn-primary">이미지 업로드</label>
+				<input type="file" id="profilePicture" name="profilePicture" accept="image/jpeg, image/png, image/gif" class="d-none">
+				
+				<button type="button" class="btn btn-danger" id="resetProfilePictureButton">X</button>
+			</div>
+		</div>
+			
+		<div class="mb-3">
+			<p class="form-label">사용자 ID</p>
+			<p class="form-control disabled" id="username" th:data-username="${#authentication.principal.username}" th:text="${#authentication.principal.username}"></p>
+		</div>
+		<div class="mb-3" th:classappend="${userProfileForm.loginType.name() != 'LOCAL'} ? 'd-none'">
+			<label for="password1" class="form-label">비밀번호</label>
+			<input type="password" th:field="*{password1}" class="form-control">
+		</div>
+		<div class="mb-3" th:classappend="${userProfileForm.loginType.name() != 'LOCAL'} ? 'd-none'">
+			<label for="password2" class="form-label">비밀번호 확인</label>
+			<input type="password" th:field="*{password2}" class="form-control">
+		</div>
+		<div class="mb-3" th:classappend="${userProfileForm.loginType.name() != 'LOCAL'} ? 'd-none'">
+			<label for="email" class="form-label" >이메일</label>
+			<input type="email" th:field="*{email}" class="form-control">
+		</div>
+	
+		<button type="submit" class="btn btn-primary">개인정보 수정</button>
+	</form>
+	
+	</div>
+	
+	<script layout:fragment="script" type='text/javascript'>
+		
+		const messageInfo = '[[${message}]]';
+		
+		if (messageInfo != null && messageInfo != '') {
+				alert(messageInfo);
+			}
+			
+		document.getElementById("profilePicture").addEventListener("change", function(event) {
+			const file = event.target.files[0];
+			
+			console.log(file);
+			
+			if (file) {
+				const reader = new FileReader();
+				
+				const fileType = file.type;
+				
+				const acceptedFileType = event.target.accept;
+				
+				console.log(acceptedFileType);
+				console.log("쿨쿨띠");
+				console.log(event.target.value);
+				
+				const showProfileImage = document.getElementById("showProfileImage");
+				
+				if (!acceptedFileType.split(", ").includes(fileType)) {
+					alert("지정된 확장자만 가능합니다.");
+					event.target.value="";
+					
+					showProfileImage.src = "/images/arrow.png";
+					
+					return;
+				}
+				
+				reader.onload = function(e) {
+					
+					console.log("파일테스트");
+					console.log(e);
+					console.log(e.target);
+					console.log(e.target.result);
+					
+					showProfileImage.src= e.target.result;
+
+				};
+				
+				reader.readAsDataURL(file);				
+				
+				
+			}
+		});
+		
+		const resetPictureProfileButton = document.getElementById('resetProfilePictureButton');
+		resetProfilePictureButton.addEventListener('click', function(event){
+			if(confirm("프로필 사진을 초기화하겠습니까?")) {
+				console.log("토큰 가져오기...");
+				// 토큰 가져오기
+				const csrfToken = document.getElementById('_csrf').getAttribute('value');
+				console.log(csrfToken);
+				const csrfHeader = document.getElementById('_csrf_header').getAttribute('value');
+				console.log(csrfHeader);
+				
+				const username = document.getElementById('username').getAttribute('data-username');
+				console.log(username);
+				fetch('/user/resetProfilePicture', {
+					method: 'POST',
+					headers: {
+						"Content-Type" : "application/json",
+						[csrfHeader] : csrfToken
+					},
+					body: JSON.stringify({username : username})
+				}
+				)
+				.then(async response => {
+					const data = await response.json();
+					
+					if (!response.ok) {
+						alert(data.message || "삭제 실패");
+						
+						
+					} else {
+						alert("삭제 완료!");
+						
+					}
+					location.reload();
+				
+				})
+
+				.catch(error => {
+					console.error("에러 발생: ", error);
+					alert("삭제 중 오류가 발생했습니다.");
+				})
+			};
+		});
+	</script>
+</html>

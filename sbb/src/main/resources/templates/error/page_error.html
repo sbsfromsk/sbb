@@ -1,0 +1,16 @@
+<html layout:decorate="~{layout}">
+	<div layout:fragment="content" class="container my-3">
+		<style>
+			.under-nav aside {
+				display: none;
+			}
+		</style>
+		<div class="card my-3">
+			<div class="card-body">
+				<div class="card-text">
+					<span th:if="${error != null}" th:text="${error}"></span>
+				</div>
+			</div>
+		</div>
+	</div>
+</html>

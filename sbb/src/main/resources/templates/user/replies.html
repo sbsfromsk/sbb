@@ -1,0 +1,186 @@
+<html layout:decorate="~{layout}">
+<div layout:fragment="content" class="container my-3">
+
+	<head>
+		<meta id="_csrf" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+	</head>
+	<style>
+		.content-box {
+			display: -webkit-box;
+			-webkit-line-clamp: 5;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		a {
+			text-decoration: none;
+			color: black;
+		}
+
+		.reply-content td {
+			padding-bottom: 0;
+		}
+	</style>
+
+	<div class="my-3 mb-2 border-bottom">
+		<h4>내가 작성한 댓글</h4>
+	</div>
+
+	<div class="d-flex justify-content-end mb-2">
+		<a class="delete btn btn-sm btn-outline-secondary" id="delete">삭제</a>
+	</div>
+
+	<table class="table">
+		<thead class="table-dark">
+			<tr class="text-center">
+				<th style="width: 50px;"></th>
+				<th>게시글</th>
+			</tr>
+		</thead>
+		<tbody>
+			<th:block th:each="reply : ${replies}" th:with="isAnswer = ${reply.level == 1},
+													            isComment = ${reply.level == 2},
+																detailUrl = ${'/question/' + reply.boardId + '/detail/' + reply.parentId +'?sort=newest&page=' + reply.pageNumber},
+																locationUrl = ${isAnswer ? '#answer_' : (isComment ? '#comment_' : '')},
+																finalUrl=@{|${detailUrl}${locationUrl}${reply.id}|}">
+				<tr class="reply-content">
+					<td rowspan="3">
+						<input type="checkbox" class="answer-cb" th:if="${reply.level == 1}"
+							th:id="'answerCb_' + ${reply.id}" th:value="${reply.id}">
+						<input type="checkbox" class="comment-cb" th:if="${reply.level == 2}"
+							th:id="'commentCb_' + ${reply.id}" th:value="${reply.id}">
+					</td>
+					<td class="border-0">
+						<a th:href="@{|${finalUrl}|}">
+							<div class="content-box" th:text="${reply.mainContent}"></div>
+						</a>
+					</td>
+				</tr>
+				<tr>
+					<td class="border-0 pb-0"><a th:href="@{${finalUrl}}"><b th:text="${reply.questionSubject}"></b></a>
+					</td>
+				</tr>
+				<tr>
+					<td class="pt-0"><a th:if="${reply.answerContent != null}" th:href="@{${finalUrl}}"
+							th:text="'└ ' + ${reply.answerContent}" style="color: lightgray"></a></td>
+				</tr>
+			</th:block>
+			<th:block th:if="${replies.isEmpty()}">
+				<tr class="text-center">
+					<td colspan="2">작성된 댓글이 없습니다.</td>
+				</tr>
+			</th:block>
+		</tbody>
+	</table>
+
+	<div th:if="${!replies.isEmpty()}">
+		<ul class="pagination justify-content-center">
+			<li class="page-item" th:classappend="${!replies.hasPrevious} ? 'disabled'">
+				<a class="page-link" href="javascript:void(0)" th:data-page="${replies.number-1}">
+					<span>이전</span>
+				</a>
+			</li>
+			<li th:each="page : ${#numbers.sequence(0, replies.totalPages-1)}"
+				th:if="${page >= replies.number -5 and page <= replies.number + 5}"
+				th:classappend="${page == replies.number} ? 'active'" class="page-item">
+				<a th:text="${page}" class="page-link" href="javascript:void(0)" th:data-page="${page}"></a>
+			</li>
+			<li class="page-item" th:classappend="${!replies.hasNext} ? 'disabled'">
+				<a class="page-link" href="javascript:void(0)" th:data-page="${replies.number + 1}">
+					<span>다음</span>
+				</a>
+			</li>
+		</ul>
+	</div>
+
+	<form th:action="@{/user/replies}" method="get" id="pageForm">
+		<input type="hidden" id="page" name="page" th:value="${replies.number}">
+	</form>
+</div>
+
+<script layout:fragment="script" type="text/javascript">
+	const page_elements = document.getElementsByClassName("page-link");
+	Array.from(page_elements).forEach(function (element) {
+		element.addEventListener('click', function () {
+			document.getElementById('page').value = this.dataset.page;
+			document.getElementById('pageForm').submit();
+		})
+	})
+
+	const answerCB_elements = document.getElementsByClassName("answer-cb");
+	Array.from(answerCB_elements).forEach(function (element) {
+		element.addEventListener('click', function () {
+			if (element.checked) {
+				console.log(element.getAttribute('id'));
+			}
+		})
+	})
+
+	const commentCB_elements = document.getElementsByClassName("comment-cb");
+	Array.from(commentCB_elements).forEach(function (element) {
+		element.addEventListener('click', function () {
+			if (element.checked) {
+				console.log(element.getAttribute('id'));
+			}
+		})
+	})
+
+	const delete_element = document.getElementById("delete");
+	delete_element.addEventListener('click', function () {
+
+		if (confirm("정말로 삭제하겠습니까?")) {
+			const checkedAnswerCB = Array.from(answerCB_elements)
+				.filter(cb => cb.checked)
+				.map(cb => cb.value);
+
+			console.log(checkedAnswerCB);
+
+			const checkedCommentCB = Array.from(commentCB_elements)
+				.filter(cb => cb.checked)
+				.map(cb => cb.value);
+
+			console.log(checkedCommentCB);
+
+			if (checkedAnswerCB.length == 0 && checkedCommentCB.length == 0) {
+				alert("선택된 항목이 없습니다.");
+
+				return;
+			}
+
+			const token = document.getElementById('_csrf').getAttribute('value');
+
+			
+				fetch('/answer/deleteReplies', {
+					method: 'POST',
+					headers: {
+						'Content-type': 'application/json',
+						'X-CSRF-Token': token
+					},
+					body: JSON.stringify({answerIds: checkedAnswerCB,
+					  					  commentIds: checkedCommentCB})
+				})
+					.then(async response => {
+						const data = await response.json();
+
+						if (!response.ok) {
+							alert(data.message || "오류 발생");
+
+							return;
+						}
+
+						if (data.redirectUrl) {
+							window.location.href = data.redirectUrl;
+						}
+					} // 답글 삭제 요청
+					)
+					.catch(error => {
+						alert(error);
+					})
+			
+		}
+	}
+	) // delete_element.addEventListener 끝
+</script>
+
+</html>

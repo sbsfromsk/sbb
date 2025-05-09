@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration>
+	<timestamp key="byDate" datePattern="yyyy-MM-dd" />
+	<!-- 콘솔에 로그 출력 -->
+	<appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<!-- 날짜, 메시지 형식 -->
+			<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS,Asia/Seoul} - %msg%n</pattern>
+		</encoder>
+	</appender>
+	
+	<!-- 파일에 로그 저장 -->
+	<appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>logs/sbb.log</file>
+		
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>logs/sbb.%d{yyyy-MM-dd}.log</fileNamePattern>
+			<maxHistory>30</maxHistory>
+			<maxFileSize>100MB</maxFileSize>
+		</rollingPolicy>
+		
+		<encoder>
+			<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS,Asia/Seoul} - %msg%n</pattern>
+		</encoder>
+	</appender>
+	
+	<!-- 로그 레벨 설정 -->
+	<root level="info">
+		<appender-ref ref="console" />
+		<appender-ref ref="file" />
+	</root>
+</configuration>

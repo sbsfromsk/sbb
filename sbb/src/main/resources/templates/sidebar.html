@@ -1,0 +1,44 @@
+<aside th:fragment="asideFragment" th:if="${boardList} != null">
+	<style>
+		
+		
+		ul {
+			list-style: none;
+			margin: 0;
+			padding: 8px 0;
+			display: fixed;
+		}
+		
+		aside li {
+			text-align: center;
+			
+		}
+		
+		aside li a {
+			text-decoration: none;
+			color: black;
+			font-size: 1rem;
+			display: block;
+			padding: 8px 0;
+		}
+		
+		aside li a:hover {
+			background-color: #555;
+			color: white;
+		}
+		
+
+	</style>
+	
+	
+		<ul>
+			<li th:each="board : ${boardList}">
+				<a th:if="${board.category.name == 'QUESTION'}"
+				   th:href="@{|/${board.category.prefix}/${board.id}/list|}" th:text="${board.boardKr}"></a>
+			    <a th:if="${board.category.name != 'QUESTION'}"
+				   th:href="@{|/${board.category.prefix}/${board.board}|}" th:text="${board.boardKr}"></a>
+			</li>
+		</ul>
+	
+
+</aside>

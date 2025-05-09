@@ -1,0 +1,119 @@
+<html layout:decorate="~{layout}">
+
+<div layout:fragment="content">
+	
+	<style>
+		
+		
+		.mainContainer {
+			width: 100%;
+			margin: 1rem auto;
+			padding: 0px 20px;
+		}
+		
+		a {
+			text-decoration: none;
+			color: black;
+		}
+		
+		.mainContainer > h5 > b {
+			font-family: 'Nanum Gothic', sans-serif;
+				}
+				
+				
+				
+		.reply-comment td {
+
+			color: gray;
+			
+			
+		}
+		
+		.reply-comment td a {
+			
+			
+			color: gray;
+			
+			display: -webkit-box;
+			-webkit-line-clamp: 1;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			max-width: 100%;  
+		}
+		
+	</style>	
+	<div class="mainContainer">
+		<h5><b>전체 글</b></h5>
+		<!-- 최신 글 START-->
+		<table class="table mt-3">	
+			<thead class="table-dark">
+				<tr class="text-center">
+					<th>게시판</th>
+					<th style="width: 50%;">제목</th>
+					<th>작성자</th>
+					<th>작성시간</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr class="text-center" th:each="question : ${mainPosts}">
+					<td th:text="${question.boardName}"></td>
+					<td class="text-start">
+						<a  th:href="@{|/question/${question.boardId}/detail/${question.id}|}"
+							th:text="${question.subject}">
+						</a>
+						<span class="text-danger small ms-2"
+							  th:if="${question.totalResponseCount > 0}"
+							  th:text="${question.totalResponseCount}">
+						</span>
+					</td>
+					<td><span th:if="${question.username != null}" th:text="${question.username}"></span></td>
+					<td th:text="${#temporals.format(question.createDate, 'yyyy-MM-dd HH:mm')}"></td>
+				</tr>
+			</tbody>
+		</table>
+		<!-- 최신 글 END -->
+		
+		<!-- 최신 답글, 댓글 START-->
+		<!-- TODO: 여기서 테이블 비율 조절하기-->
+		<h5 class="mt-5"><b>최신 답글 및 댓글</b></h5>
+		<table class="table mt-3">
+			<thead class="table-dark">
+				<tr class="text-center">
+					<th>게시판</th>
+					<th style="width: 50%;">제목</th>
+					<th>작성자</th>
+					<th>작성시간</th>
+				</tr>
+			</thead>
+			<tbody th:each="reply : ${mainReplies}">
+				<tr class="text-center reply-content pb-0">
+					<td rowspan="2" class="pb-0" th:text="${reply.boardKr}"></td>
+					<td class="text-start border-0 pb-0">
+						<a th:href="@{|/question/${reply.boardId}/detail/${reply.questionId}|}"
+						   th:text="${reply.questionSubject}"></a>
+						<span class="text-danger small ms-2"
+							  th:if="${reply.totalResponseCount > 0}"
+							  th:text="${reply.totalResponseCount}"></span>
+					</td>
+					<td class="border-0 pb-0" th:text="${reply.questionAuthor}"></td>
+					<td class="border-0 pb-0" th:text="${#temporals.format(reply.questionCreateDate, 'yyyy-MM-dd HH:mm')}"></td>
+				</tr>
+				<tr class="text-center reply-comment" >
+					<!-- 댓글 내용 START-->
+					<td class="text-start reply-box">
+						<a th:href="@{|/question/${reply.boardId}/detail/${reply.questionId}|}" th:text="'└ ' + ${reply.replyContent}"></a>
+					</td>
+					<!-- 댓글 내용 END-->
+					<td th:text="${reply.replyAuthor}"></td>
+					<td th:text="${#temporals.format(reply.replyCreateDate, 'yyyy-MM-dd HH:mm')}"></td>
+				</tr>
+				
+					
+				</td>
+			</tbody>
+		</table>
+		<!-- 최신 답글, 댓글 END-->
+	</div>
+</div>
+</html>

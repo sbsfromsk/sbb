@@ -1,0 +1,5 @@
+<div th:if="${answerErr} != null" th:fragment="formErrorsFragment" class="alert alert-danger" role="alert" >
+	<div th:if=${e.defaultMessage} th:each="e : ${answerErr}" th:text="${e.defaultMessage}" />
+</div>
+
+<div th:if=${roleErr} th:text="${roleErr}" th:fragment="formErrorsFragment" class="alert alert-danger" role="alert"></div>

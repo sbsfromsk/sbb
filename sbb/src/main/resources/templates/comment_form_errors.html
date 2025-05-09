@@ -1,0 +1,3 @@
+<div th:if="${commentErr} != null" th:fragment="formErrorsFragment" class="alert alert-danger" role="alert" >
+	<div th:each="e : ${commentErr}" th:text="${e.defaultMessage}" />
+</div>
