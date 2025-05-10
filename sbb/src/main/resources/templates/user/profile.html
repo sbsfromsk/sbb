@@ -25,7 +25,7 @@
 			<img th:src="${userProfileForm.profilePictureUrl}" alt="profile" width="150" height="150" class="mb-3" id="showProfileImage">
 			<div class="d-flex align-items-center justify-content-center">
 				<label for="profilePicture" class="btn btn-primary">이미지 업로드</label>
-				<input type="file" id="profilePicture" name="profilePicture" accept="image/jpeg, image/png, image/gif" class="d-none">
+				<input type="file" id="profilePicture" name="profilePicture" accept="image/jpeg, image/png, image/gif" class="d-none" />
 				
 				<button type="button" class="btn btn-danger" id="resetProfilePictureButton">X</button>
 			</div>
@@ -60,11 +60,14 @@
 		if (messageInfo != null && messageInfo != '') {
 				alert(messageInfo);
 			}
-			
+		
+		// 사진 미리보기 START	
 		document.getElementById("profilePicture").addEventListener("change", function(event) {
 			const file = event.target.files[0];
 			
 			console.log(file);
+			
+			
 			
 			if (file) {
 				const reader = new FileReader();
@@ -79,11 +82,13 @@
 				
 				const showProfileImage = document.getElementById("showProfileImage");
 				
+			
+				
 				if (!acceptedFileType.split(", ").includes(fileType)) {
 					alert("지정된 확장자만 가능합니다.");
 					event.target.value="";
 					
-					showProfileImage.src = "/images/arrow.png";
+					//showProfileImage.src = defaultPath;
 					
 					return;
 				}
@@ -104,7 +109,9 @@
 				
 			}
 		});
+		// 사진 미리보기 END
 		
+		// 사진 초기화 START
 		const resetPictureProfileButton = document.getElementById('resetProfilePictureButton');
 		resetProfilePictureButton.addEventListener('click', function(event){
 			if(confirm("프로필 사진을 초기화하겠습니까?")) {
@@ -147,5 +154,6 @@
 				})
 			};
 		});
+		// 사진 초기화 END
 	</script>
 </html>

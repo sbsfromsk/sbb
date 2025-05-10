@@ -69,7 +69,8 @@ public class ImageService {
 	}
 
 	private String generateUniqueFileName(Long id, String originalFilename) {
-		String extenstion = originalFilename.substring(originalFilename.lastIndexOf("."));
+		// 마지막의 확장자를 가져오기 위해 originalFilenname가져옴...
+		String extenstion = originalFilename.substring(originalFilename.lastIndexOf(".")); // abc.jpg -> lastIndexOf의 값은 3 fileName[abc.jpg].subString(3) 0부터 시작하는 인덱스에서 인덱스 3부터 끝까지 보여주세요.
 		return id + "_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")) + extenstion;
 
 	}
